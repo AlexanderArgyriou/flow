@@ -1,0 +1,17 @@
+services:
+
+  postgres:
+    image: postgres:17
+    container_name: purchasing-postgres
+    environment:
+      POSTGRES_DB: purchasing
+      POSTGRES_USER: purchasing
+      POSTGRES_PASSWORD: purchasing
+    ports:
+      - "5432:5432"
+
+  kafka:
+    image: apache/kafka:4.0.0
+    container_name: purchasing-kafka
+    ports:
+      - "9092:9092"
