@@ -34,7 +34,11 @@ public class PurchaseFlow extends Flow {
                 listen(
                         "waitForApproval",
                         toOne(
-                                "org.flow.approval"
+                                consumed("org.flow.approval")
+                                        .dataAs(ApprovalEvent.class, (event, wfCtx, taskCtx) -> {
+                                            Purchase current = taskCtx.input().as(Purchase.class).orElseThrow();
+                                            return event.purchaseId().equals(current.id);
+                                        })
                         )
                 ),
                 switchWhenOrElse(
