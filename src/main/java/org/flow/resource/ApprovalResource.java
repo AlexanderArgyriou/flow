@@ -16,13 +16,6 @@ public class ApprovalResource {
         this.approvalFlow = approvalFlow;
     }
 
-    public record ApprovalEvent(
-            String type,
-            Long purchaseId,
-            ApprovalStatus decision
-    ) {
-    }
-
     public record ApprovalRequest(
             Long purchaseId,
             ApprovalStatus decision

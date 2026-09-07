@@ -4,9 +4,12 @@ import io.quarkiverse.flow.Flow;
 import io.quarkiverse.flow.dsl.FlowWorkflowBuilder;
 import io.serverlessworkflow.api.types.Workflow;
 import jakarta.enterprise.context.ApplicationScoped;
+import org.flow.domain.Purchase;
 import org.flow.enums.ApprovalStatus;
 import org.flow.enums.PurchaseStatus;
+import org.flow.messaging.ApprovalEvent;
 import org.flow.resource.ApprovalResource;
+import org.flow.resource.PurchaseResource;
 import org.flow.service.PurchaseService;
 
 import java.util.Map;
@@ -24,6 +27,7 @@ public class PurchaseFlow extends Flow {
     @Override
     public Workflow descriptor() {
         return FlowWorkflowBuilder.workflow("purchase").tasks(
+                function("createPurchase", this::createPurchase),
                 function("validatePurchase", this::validatePurchase),
                 function("reserveInventory", this::reserveInventory),
                 function("waitingApproval", this::waitingApproval),
@@ -31,14 +35,14 @@ public class PurchaseFlow extends Flow {
                         "waitForApproval",
                         toOne(
                                 "org.flow.approval"
-                        ).first()
+                        )
                 ),
                 switchWhenOrElse(
-                        (ApprovalResource.ApprovalEvent event) ->
+                        (ApprovalEvent event) ->
                                 ApprovalStatus.APPROVED.equals(event.decision()),
                         "approved",
                         "rejected",
-                        ApprovalResource.ApprovalEvent.class
+                        ApprovalEvent.class
                 ),
                 function("rejected", this::rejected),
                 function("approved", this::approved),
@@ -47,91 +51,58 @@ public class PurchaseFlow extends Flow {
         ).build();
     }
 
-    private Map<String, Object> approved(Map<String, Object> ctx) {
-        Long purchaseId =
-                ((Number) ctx.get("purchaseId"))
-                        .longValue();
-
-        purchaseService.setStatus(
-                purchaseId,
-                PurchaseStatus.APPROVED
+    private Purchase createPurchase(
+            PurchaseResource.CreatePurchaseRequest request) {
+        return purchaseService.create(
+                request.requester(),
+                request.description(),
+                request.supplier(),
+                request.total()
         );
-
-        return ctx;
     }
 
-    private Map<String, Object> validatePurchase(Map<String, Object> ctx) {
-        Long purchaseId =
-                ((Number) ctx.get("purchaseId"))
-                        .longValue();
-
-        purchaseService.setStatus(
-                purchaseId,
+    private Purchase validatePurchase(Purchase purchase) {
+        return purchaseService.setStatus(
+                purchase.id,
                 PurchaseStatus.VALIDATING
         );
-
-        return ctx;
     }
 
-    private Map<String, Object> reserveInventory(Map<String, Object> ctx) {
-        Long purchaseId =
-                ((Number) ctx.get("purchaseId"))
-                        .longValue();
-
-        purchaseService.reserveStock(
-                purchaseId
+    private Purchase reserveInventory(Purchase purchase) {
+        return purchaseService.reserveStock(
+                purchase.id
         );
-
-        return ctx;
     }
 
-    private Map<String, Object> waitingApproval(Map<String, Object> ctx) {
-        Long purchaseId =
-                ((Number) ctx.get("purchaseId"))
-                        .longValue();
-
-        purchaseService.setStatus(
-                purchaseId,
+    private Purchase waitingApproval(Purchase purchase) {
+        return purchaseService.setStatus(
+                purchase.id,
                 PurchaseStatus.WAITING_APPROVAL
         );
-
-        return ctx;
     }
 
-    private Map<String, Object> createSupplierOrder(Map<String, Object> ctx) {
-        Long purchaseId =
-                ((Number) ctx.get("purchaseId"))
-                        .longValue();
-
-        purchaseService
-                .createSupplierOrder(
-                        purchaseId
-                );
-
-        return ctx;
-    }
-
-    private Map<String, Object> complete(Map<String, Object> ctx) {
-        Long purchaseId =
-                ((Number) ctx.get("purchaseId"))
-                        .longValue();
-
-        purchaseService.complete(
-                purchaseId
+    private Purchase approved(ApprovalEvent event) {
+        return purchaseService.setStatus(
+                event.purchaseId(),
+                PurchaseStatus.APPROVED
         );
-
-        return ctx;
     }
 
-    private Map<String, Object> rejected(Map<String, Object> ctx) {
-        Long purchaseId =
-                ((Number) ctx.get("purchaseId"))
-                        .longValue();
-
-        purchaseService.reject(
-                purchaseId
+    private Purchase rejected(ApprovalEvent event) {
+        return purchaseService.reject(
+                event.purchaseId()
         );
+    }
 
-        return ctx;
+    private Purchase createSupplierOrder(Purchase purchase) {
+        return purchaseService.createSupplierOrder(
+                purchase.id
+        );
+    }
+
+    private Purchase complete(Purchase purchase) {
+        return purchaseService.complete(
+                purchase.id
+        );
     }
 }

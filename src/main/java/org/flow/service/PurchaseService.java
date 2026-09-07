@@ -3,10 +3,10 @@ package org.flow.service;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
-import org.flow.PurchaseFlow;
 import org.flow.domain.Purchase;
 import org.flow.enums.PurchaseStatus;
 import org.jboss.logging.Logger;
+import org.jspecify.annotations.NonNull;
 
 import java.math.BigDecimal;
 
@@ -21,7 +21,6 @@ public class PurchaseService {
             String description,
             String supplier,
             BigDecimal total) {
-
         Purchase purchase = new Purchase();
 
         purchase.requester = requester;
@@ -39,32 +38,14 @@ public class PurchaseService {
     public Purchase setStatus(
             Long id,
             PurchaseStatus status) {
-
-        Purchase purchase = Purchase.<Purchase>findById(id);
-
-        if (purchase == null) {
-            throw new NotFoundException(
-                    "Purchase " + id + " not found"
-            );
-        }
-
+        Purchase purchase = findPurchase(id);
         purchase.status = status;
-
         return purchase;
     }
 
-
     @Transactional
     public Purchase reserveStock(Long purchaseId) {
-
-        Purchase purchase = Purchase.<Purchase>findById(purchaseId);
-
-        if (purchase == null) {
-            throw new NotFoundException(
-                    "Purchase " + purchaseId + " not found"
-            );
-        }
-
+        Purchase purchase = findPurchase(purchaseId);
         log.infof(
                 "RESERVING STOCK FOR PURCHASE %d",
                 purchaseId
@@ -79,14 +60,7 @@ public class PurchaseService {
 
     @Transactional
     public Purchase createSupplierOrder(Long purchaseId) {
-
-        Purchase purchase = Purchase.<Purchase>findById(purchaseId);
-
-        if (purchase == null) {
-            throw new NotFoundException(
-                    "Purchase " + purchaseId + " not found"
-            );
-        }
+        Purchase purchase = findPurchase(purchaseId);
 
         log.infof(
                 "CREATING SUPPLIER ORDER FOR %d",
@@ -95,21 +69,13 @@ public class PurchaseService {
 
         purchase.status =
                 PurchaseStatus.SUPPLIER_ORDERED;
-
         return purchase;
     }
 
 
     @Transactional
     public Purchase complete(Long purchaseId) {
-
-        Purchase purchase = Purchase.<Purchase>findById(purchaseId);
-
-        if (purchase == null) {
-            throw new NotFoundException(
-                    "Purchase " + purchaseId + " not found"
-            );
-        }
+        Purchase purchase = findPurchase(purchaseId);
 
         log.infof(
                 "COMPLETING PURCHASE %d",
@@ -126,13 +92,7 @@ public class PurchaseService {
     @Transactional
     public Purchase reject(Long purchaseId) {
 
-        Purchase purchase = Purchase.<Purchase>findById(purchaseId);
-
-        if (purchase == null) {
-            throw new NotFoundException(
-                    "Purchase " + purchaseId + " not found"
-            );
-        }
+        Purchase purchase = findPurchase(purchaseId);
 
         log.infof(
                 "REJECTING PURCHASE %d",
@@ -142,6 +102,17 @@ public class PurchaseService {
         purchase.status =
                 PurchaseStatus.REJECTED;
 
+        return purchase;
+    }
+
+    private @NonNull Purchase findPurchase(Long id) {
+        Purchase purchase = Purchase.<Purchase>findById(id);
+
+        if (purchase == null) {
+            throw new NotFoundException(
+                    "Purchase " + id + " not found"
+            );
+        }
         return purchase;
     }
 }

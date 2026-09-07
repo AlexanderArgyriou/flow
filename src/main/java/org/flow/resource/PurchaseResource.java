@@ -17,30 +17,24 @@ import java.util.Map;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class PurchaseResource {
-    private final PurchaseService purchaseService;
     private final PurchaseFlow purchaseFlow;
 
     public PurchaseResource(
-            PurchaseService purchaseService,
             PurchaseFlow purchaseFlow) {
-        this.purchaseService = purchaseService;
         this.purchaseFlow = purchaseFlow;
     }
 
+    public record CreatePurchaseRequest(
+            String requester,
+            String description,
+            String supplier,
+            BigDecimal total
+    ) {}
+
     @POST
-    @Blocking
     public Uni<Map<String, Object>> create(
             CreatePurchaseRequest request) {
-        return Uni.createFrom().item(() ->
-                        purchaseService.create(
-                                request.requester(),
-                                request.description(),
-                                request.supplier(),
-                                request.total()
-                        )
-                )
-                .map(p -> Map.of("purchaseId", p.id,"purchase", p))
-                .chain(ctx -> purchaseFlow.startInstance(ctx))
+        return purchaseFlow.startInstance(request)
                 .map(r -> r.asMap().orElseThrow());
     }
 
@@ -56,13 +50,5 @@ public class PurchaseResource {
                                 "Purchase " + id + " not found"
                         )
                 );
-    }
-
-    public record CreatePurchaseRequest(
-            String requester,
-            String description,
-            String supplier,
-            BigDecimal total
-    ) {
     }
 }
