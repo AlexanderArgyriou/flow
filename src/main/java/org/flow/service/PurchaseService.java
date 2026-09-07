@@ -1,9 +1,11 @@
-package org.flow;
+package org.flow.service;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
+import org.flow.PurchaseFlow;
+import org.flow.domain.Purchase;
+import org.flow.enums.PurchaseStatus;
 import org.jboss.logging.Logger;
 
 import java.math.BigDecimal;
@@ -13,6 +15,7 @@ public class PurchaseService {
 
     private static final Logger log = Logger.getLogger(PurchaseService.class);
 
+    @Transactional
     public Purchase create(
             String requester,
             String description,
@@ -25,17 +28,17 @@ public class PurchaseService {
         purchase.description = description;
         purchase.supplier = supplier;
         purchase.total = total;
-        purchase.status = PurchaseFlow.PurchaseStatus.CREATED;
+        purchase.status = PurchaseStatus.CREATED;
 
         purchase.persist();
 
         return purchase;
     }
 
-    
+    @Transactional
     public Purchase setStatus(
             Long id,
-            PurchaseFlow.PurchaseStatus status) {
+            PurchaseStatus status) {
 
         Purchase purchase = Purchase.<Purchase>findById(id);
 
@@ -50,7 +53,8 @@ public class PurchaseService {
         return purchase;
     }
 
-    
+
+    @Transactional
     public Purchase reserveStock(Long purchaseId) {
 
         Purchase purchase = Purchase.<Purchase>findById(purchaseId);
@@ -67,12 +71,13 @@ public class PurchaseService {
         );
 
         purchase.status =
-                PurchaseFlow.PurchaseStatus.STOCK_RESERVED;
+                PurchaseStatus.STOCK_RESERVED;
 
         return purchase;
     }
 
-    
+
+    @Transactional
     public Purchase createSupplierOrder(Long purchaseId) {
 
         Purchase purchase = Purchase.<Purchase>findById(purchaseId);
@@ -89,12 +94,13 @@ public class PurchaseService {
         );
 
         purchase.status =
-                PurchaseFlow.PurchaseStatus.SUPPLIER_ORDERED;
+                PurchaseStatus.SUPPLIER_ORDERED;
 
         return purchase;
     }
 
-    
+
+    @Transactional
     public Purchase complete(Long purchaseId) {
 
         Purchase purchase = Purchase.<Purchase>findById(purchaseId);
@@ -111,12 +117,13 @@ public class PurchaseService {
         );
 
         purchase.status =
-                PurchaseFlow.PurchaseStatus.COMPLETED;
+                PurchaseStatus.COMPLETED;
 
         return purchase;
     }
 
-    
+
+    @Transactional
     public Purchase reject(Long purchaseId) {
 
         Purchase purchase = Purchase.<Purchase>findById(purchaseId);
@@ -133,7 +140,7 @@ public class PurchaseService {
         );
 
         purchase.status =
-                PurchaseFlow.PurchaseStatus.REJECTED;
+                PurchaseStatus.REJECTED;
 
         return purchase;
     }

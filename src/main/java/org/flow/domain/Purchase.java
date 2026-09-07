@@ -1,8 +1,8 @@
-package org.flow;
+package org.flow.domain;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.*;
-
+import org.flow.enums.PurchaseStatus;
 
 import java.math.BigDecimal;
 
@@ -14,6 +14,6 @@ public class Purchase extends PanacheEntity {
     public String supplier;
     public BigDecimal total;
     @Enumerated(EnumType.STRING)
-    public PurchaseFlow.PurchaseStatus status;
+    public PurchaseStatus status;
     public String workflowInstanceId;
 }

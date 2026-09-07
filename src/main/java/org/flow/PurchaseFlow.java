@@ -4,6 +4,10 @@ import io.quarkiverse.flow.Flow;
 import io.quarkiverse.flow.dsl.FlowWorkflowBuilder;
 import io.serverlessworkflow.api.types.Workflow;
 import jakarta.enterprise.context.ApplicationScoped;
+import org.flow.enums.ApprovalStatus;
+import org.flow.enums.PurchaseStatus;
+import org.flow.resource.ApprovalResource;
+import org.flow.service.PurchaseService;
 
 import java.util.Map;
 
@@ -15,18 +19,6 @@ public class PurchaseFlow extends Flow {
 
     public PurchaseFlow(PurchaseService purchaseService) {
         this.purchaseService = purchaseService;
-    }
-
-    public enum PurchaseStatus {
-        CREATED,
-        VALIDATING,
-        WAITING_APPROVAL,
-        APPROVED,
-        REJECTED,
-        STOCK_RESERVED,
-        SUPPLIER_ORDERED,
-        COMPLETED,
-        FAILED
     }
 
     @Override
@@ -42,14 +34,13 @@ public class PurchaseFlow extends Flow {
                         ).first()
                 ),
                 switchWhenOrElse(
-                        (Map<String, Object> ctx) ->
-                                "APPROVED".equals(
-                                        ctx.get("decision")
-                                ),
-
+                        (ApprovalResource.ApprovalEvent event) ->
+                                ApprovalStatus.APPROVED.equals(event.decision()),
                         "approved",
-                        "rejected"
+                        "rejected",
+                        ApprovalResource.ApprovalEvent.class
                 ),
+                function("rejected", this::rejected),
                 function("approved", this::approved),
                 function("createSupplierOrder", this::createSupplierOrder),
                 function("completePurchase", this::complete)

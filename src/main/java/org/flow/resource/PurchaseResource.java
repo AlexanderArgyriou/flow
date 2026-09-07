@@ -1,17 +1,17 @@
-package org.flow;
+package org.flow.resource;
 
-import io.serverlessworkflow.api.types.Workflow;
-import io.serverlessworkflow.impl.WorkflowModel;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.common.annotation.Blocking;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import org.flow.PurchaseFlow;
+import org.flow.service.PurchaseService;
+import org.flow.domain.Purchase;
 
 
 import java.math.BigDecimal;
 import java.util.Map;
-import java.util.UUID;
 
 @Path("/purchases")
 @Produces(MediaType.APPLICATION_JSON)
@@ -20,14 +20,15 @@ public class PurchaseResource {
     private final PurchaseService purchaseService;
     private final PurchaseFlow purchaseFlow;
 
-    public PurchaseResource(PurchaseService purchaseService, PurchaseFlow purchaseFlow) {
+    public PurchaseResource(
+            PurchaseService purchaseService,
+            PurchaseFlow purchaseFlow) {
         this.purchaseService = purchaseService;
         this.purchaseFlow = purchaseFlow;
     }
 
     @POST
     @Blocking
-    @Transactional
     public Uni<Map<String, Object>> create(
             CreatePurchaseRequest request) {
         return Uni.createFrom().item(() ->
@@ -38,10 +39,9 @@ public class PurchaseResource {
                                 request.total()
                         )
                 )
-                .map(p -> Map.of("purchaseId", p.id))
+                .map(p -> Map.of("purchaseId", p.id,"purchase", p))
                 .chain(ctx -> purchaseFlow.startInstance(ctx))
                 .map(r -> r.asMap().orElseThrow());
-
     }
 
 

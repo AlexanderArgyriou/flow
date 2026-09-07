@@ -1,4 +1,4 @@
-package org.flow;
+package org.flow.domain;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.Entity;
