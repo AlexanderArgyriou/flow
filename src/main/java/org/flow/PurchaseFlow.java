@@ -11,6 +11,7 @@ import org.flow.messaging.ApprovalEvent;
 import org.flow.resource.ApprovalResource;
 import org.flow.resource.PurchaseResource;
 import org.flow.service.PurchaseService;
+import org.jboss.logging.Logger;
 
 import java.util.Map;
 
@@ -18,6 +19,8 @@ import static io.quarkiverse.flow.dsl.FlowDSL.*;
 
 @ApplicationScoped
 public class PurchaseFlow extends Flow {
+    private static final Logger log = Logger.getLogger(PurchaseFlow.class);
+
     private final PurchaseService purchaseService;
 
     public PurchaseFlow(PurchaseService purchaseService) {

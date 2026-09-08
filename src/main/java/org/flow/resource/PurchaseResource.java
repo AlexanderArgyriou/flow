@@ -1,12 +1,9 @@
 package org.flow.resource;
 
 import io.smallrye.mutiny.Uni;
-import io.smallrye.common.annotation.Blocking;
-import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.flow.PurchaseFlow;
-import org.flow.service.PurchaseService;
 import org.flow.domain.Purchase;
 
 
