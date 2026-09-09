@@ -2,6 +2,7 @@ package org.flow;
 
 import io.quarkiverse.flow.Flow;
 import io.quarkiverse.flow.dsl.FlowWorkflowBuilder;
+import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.Workflow;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.flow.domain.Purchase;
@@ -51,7 +52,8 @@ public class PurchaseFlow extends Flow {
                         "rejected",
                         ApprovalEvent.class
                 ),
-                function("rejected", this::rejected),
+                function("rejected", this::rejected)
+                        .then(FlowDirectiveEnum.END),
                 function("approved", this::approved),
                 function("createSupplierOrder", this::createSupplierOrder),
                 function("completePurchase", this::complete)
